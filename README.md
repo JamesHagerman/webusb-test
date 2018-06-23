@@ -16,8 +16,8 @@ yarn start
 
 Once you've done that, you should be able to access this app locally at: [http://localhost:3000](http://localhost:3000)
 
-*Note: If you're planning on hosting this somewhere, remember that you'll need to use TLS to get the WebUSB API
-working!*
+*Note: If you're planning on hosting this somewhere (`yarn build`), remember that you'll need to implement TLS to get 
+the WebUSB API working! This stuff only works on secure origins... And localhost is a secure origin!*
 
 ## Particle Photon stuff - Serial output over USB
 
