@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import DeviceList from './components/DeviceList/'
 //import logo from './logo.svg';
 //import './App.css';
 
@@ -6,8 +7,22 @@ class App extends Component {
   constructor(props) {
     super(props)
 
+    this.state = {
+      allowedDevices: []
+    }
+
     this.connectToUSB = this.connectToUSB.bind(this)
-    this.connectToHID = this.connectToHID.bind(this)
+  }
+
+  componentWillMount() {
+    navigator.usb.getDevices()
+      .then(devices => {
+        if (devices.length > 0) {
+          this.setState({ allowedDevices: devices })
+        } else {
+          console.log('No currently allowed USB devices...')
+        }
+      })
   }
 
   connectToUSB() {
@@ -20,34 +35,37 @@ class App extends Component {
    //     console.log(error)
    //   })
 
-    navigator.usb.requestDevice({ filters: [] })
+
+    // Known vendor IDs for Particle devices:
+    // 1d50
+    // 2b04
+
+    navigator.usb.requestDevice({ filters: [{ vendorId: 0x1d50 }, { vendorId: 0x2b04 }] })
       .then(device => {
-        console.log(device)
+        // Note: Device Objects returned from the WebUSB APIs do not play nice with JSON.stringify()
+        console.log(`Newly allowed USB device:`, device)
       })
-
-    // getDevices() only returns the devices you've requests and the user has accepted
-    navigator.usb.getDevices()
+      .then(() => {
+        // getDevices() only returns the devices we've requested, and that the user has allowed
+        return navigator.usb.getDevices()
+      })
       .then(devices => {
-        console.log('devices', devices)
+        console.log(`${devices.length} currently allowed USB devices:`)
+        devices.forEach((device, i) => {
+          console.log(`Allowed USB device ${i}:`, device)
+        })
+        this.setState({
+          allowedDevices: devices
+        })
       })
-  }
 
-  connectToHID() {
-    //chrome.hid.getDevices({}, () => {
-
-    //})
   }
 
   render() {
     return (
       <div className="App">
-        <button onClick={this.connectToUSB}>Connect To USB</button>
-        <button onClick={this.connectToHID}>Connect To HID</button>
-
-        <div>
-          List of devices:
-          
-        </div>
+        <button onClick={this.connectToUSB}>Allow USB Device...</button>
+        <DeviceList devices={this.state.allowedDevices} />
       </div>
     );
   }

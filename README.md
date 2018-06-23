@@ -51,6 +51,10 @@ board):
 screen /dev/ttyACM0 9600
 ```
 
+*Note: Under Linux, you will need to make sure you have Udev rules correctly in place in order to access USB devices!
+For Particle devices, instructions for this can be found here:
+[https://gist.github.com/monkbroc/b283bb4da8c10228a61e](https://gist.github.com/monkbroc/b283bb4da8c10228a61e)*
+
 This spit out some friendly values and we're ready to move on to trying to get the WebUSB part working:
 
 
