@@ -78,4 +78,63 @@ There are two parts to this:
 We'll step through both of these, make some React components along the way, and make some notes on how it goes!
 
 
+### OS Drivers get in the way...
+
+The largest hangup with WebUSB is that it really doesn't work well when the OS drivers claim the USB interfaces before
+we get the chance to via the browser.
+
+This requires us to manually `unbind` the USB device from the OS's driver. I can't find a way to do this using only Web
+technologies and that's obviously a drag.
+
+On Linux, the `/sys/bus/usb/drivers/usb/` directory has a node named `unbind` that can be used to unbind a USB device. 
+In this case, to unbind the Particle Photon described in that `dmesg` output, we can do the following (*Note, I havd
+to be at a root prompt to get this to work!*):
+
+```
+sudo su
+echo -n "1-1.1" > /sys/bus/usb/drivers/usb/unbind
+```
+
+This will unbind the device on bus 1, port 1, using configuration 1. I found using a combination of `dmesg` and `tree`
+to help figure out what device was what. 
+
+Under Linux, when the device is plugged in, `dmesg` will spit out something like this:
+
+```
+% dmesg -Hw
+[  +3.556778] usb 1-1.1: new full-speed USB device number 28 using ehci-pci
+[  +0.094945] usb 1-1.1: New USB device found, idVendor=2b04, idProduct=c006
+[  +0.000011] usb 1-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  +0.000007] usb 1-1.1: Product: Photon
+[  +0.000005] usb 1-1.1: Manufacturer: Particle
+[  +0.000005] usb 1-1.1: SerialNumber: 123123123123123123
+[  +0.002839] cdc_acm 1-1.1:1.0: ttyACM0: USB ACM device
+```
+
+`tree` isn't often installed, but it's helpful here:
+
+```
+% tree /sys/bus/usb/drivers/usb/
+/sys/bus/usb/drivers/usb/
+├── 1-1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1
+├── 1-1.1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.1
+├── 1-1.2 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.2
+├── 1-1.3 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.3
+├── 1-1.4 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.4
+├── 1-1.6 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.6
+├── 2-1 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1
+├── 2-1.1 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.1
+├── bind
+├── uevent
+├── unbind
+├── usb1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1
+└── usb2 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2
+
+10 directories, 3 files
+```
+
+After sending the device to the unbind node, the OS driver should no longer be in control of the interface, and your
+WebUSB code *should* work better...
+
+
 

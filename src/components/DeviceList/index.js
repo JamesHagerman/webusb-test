@@ -7,7 +7,8 @@ class DeviceList extends Component {
 
   render() {
     const {
-      devices
+      devices,
+      openCallback
     } = this.props
 
     let deviceList = []
@@ -16,7 +17,10 @@ class DeviceList extends Component {
       deviceList = devices.map((device, i) => {
         return (
           <div key={i}>
-            {device.manufacturerName} - {device.productName} <button>Tail Serial Log...</button>
+            {device.manufacturerName} - {device.productName}
+            <button onClick={() => {
+              openCallback(device)
+            }}>Tail Serial Log...</button>
           </div>
         )
       })
