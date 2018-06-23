@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 //import logo from './logo.svg';
 //import './App.css';
 
@@ -20,10 +20,12 @@ class App extends Component {
    //     console.log(error)
    //   })
 
-    //navigator.usb.requestDevice({ filters: [] })
-    //  .then(device => {
-    //    console.log(device)
-    //  })
+    navigator.usb.requestDevice({ filters: [] })
+      .then(device => {
+        console.log(device)
+      })
+
+    // getDevices() only returns the devices you've requests and the user has accepted
     navigator.usb.getDevices()
       .then(devices => {
         console.log('devices', devices)
@@ -52,3 +54,4 @@ class App extends Component {
 }
 
 export default App;
+

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "babel-eslint": "^8.2.4",
+    "eslint": "^5.0.0",
+    "eslint-plugin-react": "^7.9.1",
     "react": "^15.6.1",
     "react-dom": "^15.6.1"
   },
