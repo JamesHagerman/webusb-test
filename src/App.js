@@ -8,7 +8,8 @@ class App extends Component {
     super(props)
 
     this.state = {
-      allowedDevices: []
+      allowedDevices: [],
+      polling: false // TODO: Should this state combine "polling" and "this is the device we are polling"?
     }
 
     this.connectToUSB = this.connectToUSB.bind(this)
@@ -65,6 +66,9 @@ class App extends Component {
   async openDevice(device) {
     console.log(`Trying to open ${device.manufacturerName.trim()} - ${device.productName.trim()}...`, device)
   
+    let particleUARTInterface = 1
+    let particleUARTEndpoint = 1
+
     try {
       // To get data, first we have to tell the OS to open the device. This requires that the OS is not already USING
       // this device.
@@ -74,10 +78,11 @@ class App extends Component {
       if (device.configuration === null) {
         // In theory, a USB device can have multiple configurations. It should have been correctly selected on device
         // enumeration but we make sure it's selected in case the OS didn't do so yet:
-        await device.selectConfiguration(1)
+        await device.selectConfiguration(1) // TODO: Do any devices from Particle have more than one configuration?
       }
       // Now that we've opened the device and selected a configuration, we need to claim one of the devices interfaces.
-      await device.claimInterface(0);
+      await device.claimInterface(particleUARTInterface);
+      console.log('Interface claimed!')
 
       // Since I do not know anything about the existing USB interfaces on the Particle, I'm just gonna ham this next
       // part until I find an endpoint that's spitting out something like serial data! If not, I'll have to dig through
@@ -87,11 +92,24 @@ class App extends Component {
         recipient: 'interface',
         request: 0x22,
         value: 0x01,
-        index: 0x02
+        index: particleUARTInterface //0x01 // Interface
       })
 
-      let someData = await device.transferIn(5, 64)
-      console.log('Any data we got back:', someData)
+      // At this point, we should be ready to poll for data! We'll just grab data here for now so we can show that it
+      // works by hammering the "Tail Serial Log..." button...
+      let result = await device.transferIn(particleUARTEndpoint, 64)
+
+      // The transferIn API returns a DataView (a low level interface fro reading raw data from an ArrayBuffer). This
+      // means it's easier to use a decoder to get the data:
+      let decoder = new TextDecoder();
+      console.log('Received: ' + decoder.decode(result.data));
+
+      // Really, we should transition to a "Polling" state somehow so we can better control when and how we will
+      // actually continue watching data over time...
+      this.setState({
+
+      })
+
     } catch(err) {
       console.error('oh man...', err)
     }

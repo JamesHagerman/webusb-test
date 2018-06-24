@@ -81,60 +81,54 @@ We'll step through both of these, make some React components along the way, and 
 ### OS Drivers get in the way...
 
 The largest hangup with WebUSB is that it really doesn't work well when the OS drivers claim the USB interfaces before
-we get the chance to via the browser.
+we get the chance to do so from our javascript code in the browser.
 
 This requires us to manually `unbind` the USB device from the OS's driver. I can't find a way to do this using only Web
 technologies and that's obviously a drag.
 
-On Linux, the `/sys/bus/usb/drivers/usb/` directory has a node named `unbind` that can be used to unbind a USB device. 
-In this case, to unbind the Particle Photon described in that `dmesg` output, we can do the following (*Note, I havd
-to be at a root prompt to get this to work!*):
+But, on Linux, we can do so manually, or (in theory) use Udev rules to disable a device against a specific driver.
+
+In this case, because the Particle devices are bound to the `cdc_acm` Serial device driver, we could, in theory, patch
+the existing Linux kernel driver to allow us some level of "per-device" black listing functionality (it's been asked for
+for by the community for a while now...) but that option is not currently available to us. (patches are probably
+accepted though!)
+
+In the meantime, we will need to perform step manually.
+
+On Linux, the `/sys/bus/usb/drivers/` directory allows a user to control the USB kernel drivers for each USB device
+connected to the system. Specifically, you are able to bind and unbind devices from their respective drivers.
+
+For example, to unbind the Particle Photon from the `cdc_acm` driver in the Linux kernel, we can do the following 
+*Note, I had to be at a root prompt to get this to work.*
 
 ```
 sudo su
-echo -n "1-1.1" > /sys/bus/usb/drivers/usb/unbind
+dmesg | grep cdc | tail -n 1 # This will spit out the information we need about the last connected cdc_acm device
+echo -n "1-1.1:1.0" > /sys/bus/usb/drivers/cdc_acm/unbind # Use the correct value here or bad things can happen!
 ```
 
-This will unbind the device on bus 1, port 1, using configuration 1. I found using a combination of `dmesg` and `tree`
-to help figure out what device was what. 
+This will unbind the device on bus 1, port 1, using configuration 1, and interface 1.
 
-Under Linux, when the device is plugged in, `dmesg` will spit out something like this:
-
-```
-% dmesg -Hw
-[  +3.556778] usb 1-1.1: new full-speed USB device number 28 using ehci-pci
-[  +0.094945] usb 1-1.1: New USB device found, idVendor=2b04, idProduct=c006
-[  +0.000011] usb 1-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  +0.000007] usb 1-1.1: Product: Photon
-[  +0.000005] usb 1-1.1: Manufacturer: Particle
-[  +0.000005] usb 1-1.1: SerialNumber: 123123123123123123
-[  +0.002839] cdc_acm 1-1.1:1.0: ttyACM0: USB ACM device
-```
-
-`tree` isn't often installed, but it's helpful here:
+You can use the `tree` command to inspect all of the currently connected cdc usb devices. Note that `tree` often is not 
+installed on Linux distributions by default, but it is very helpful:
 
 ```
-% tree /sys/bus/usb/drivers/usb/
-/sys/bus/usb/drivers/usb/
-├── 1-1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1
-├── 1-1.1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.1
-├── 1-1.2 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.2
-├── 1-1.3 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.3
-├── 1-1.4 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.4
-├── 1-1.6 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.6
-├── 2-1 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1
-├── 2-1.1 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.1
+# tree /sys/bus/usb/drivers/cdc_acm/
+/sys/bus/usb/drivers/cdc_acm/
+├── 1-1.1:1.0 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.1/1-1.1:1.0
+├── 1-1.1:1.1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.1/1-1.1:1.1
 ├── bind
+├── module -> ../../../../module/cdc_acm
+├── new_id
+├── remove_id
 ├── uevent
-├── unbind
-├── usb1 -> ../../../../devices/pci0000:00/0000:00:1a.0/usb1
-└── usb2 -> ../../../../devices/pci0000:00/0000:00:1d.0/usb2
+└── unbind
 
-10 directories, 3 files
+3 directories, 5 files
 ```
 
 After sending the device to the unbind node, the OS driver should no longer be in control of the interface, and your
-WebUSB code *should* work better...
+WebUSB code should work as expected!
 
 
 
