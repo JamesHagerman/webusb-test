@@ -17,7 +17,8 @@ class App extends Component {
     this.state = {
       allowedDevices: [], // Keeps track of all currently opened, raw USB devices
       pollingDevices: [], // Keeps track of which devices (by index) are currently polling
-      deviceData: [] // Keeps track of all data returned by each device
+      deviceData: [], // Keeps track of all data returned by each device
+      bufferLength: 10000 // Size of each output "buffer" in characters
     }
 
     this.allowUSBDevice = this.allowUSBDevice.bind(this)
@@ -111,6 +112,10 @@ class App extends Component {
   pollDevices() {
     // This is basically the main polling loop. Here, we're calling it using requestAnimationFrame() but it should
     // probably be done using something else...
+    //
+    const {
+      bufferLength
+    } = this.state
     
     let allPollPromises = this.state.allowedDevices.map(async (device, index) => {
       let decodedData = ''
@@ -121,12 +126,25 @@ class App extends Component {
     })
 
     Promise.all(allPollPromises)
-      .then(deviceData => {
-        //console.log('Devices returned this data:', deviceData)
+      .then(allDeviceData => {
+        //console.log('Devices returned this data:', allDeviceData)
+        let deviceData = this.state.deviceData.slice(0)
+
+        allDeviceData.forEach((newData, index) => {
+          let fullData = deviceData[index]
+          fullData = fullData.concat(newData)
+
+          // "tail" the end of the output by some length:
+          if (fullData.length > bufferLength) {
+            fullData = fullData.substr(fullData.length - bufferLength);
+          }
+          deviceData[index] = fullData
+        })
+
         this.setState({ deviceData })
         
         // Comment this out to poll a single time.
-        //window.requestAnimationFrame(this.pollDevices)
+        window.requestAnimationFrame(this.pollDevices)
       })
 
   }
