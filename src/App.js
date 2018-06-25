@@ -194,18 +194,28 @@ class App extends Component {
       <div className="App">
         <h4>Particle USB Serial Port Logging via WebUSB</h4>
         <p>
-          The purpose of this page is to provide access to data being printed on the Serial Port of Particle devices
+          The purpose of this page is to provide access to data being printed on the Serial Port of Particle devices. 
+          Source code for this project can be found here: <a href="https://github.com/JamesHagerman/webusb-test">
+          https://github.com/JamesHagerman/webusb-test</a>
+        </p>
+        <p>
+          Note that this has only been tested using Chrome on Linux. If you are interested in grabbing data from a 
+          serial port, you may want to try the "chrome.serial" API instead: <a href="https://developer.chrome.com/apps/serial">
+          https://developer.chrome.com/apps/serial</a>
         </p>
         <p>
           First, plug in your Particle board via USB. Then, make sure that a driver on your computer's OS isn't claiming
           that USB device (follow README.md for more info). Click the "Allow USB Device..." button, and select one of 
           your Particle devices.
         </p>
-        <p>Finally, click the "Open Device" button next to the device you want to watch.</p>
+        <p>Click the "Open Device" button next to the device you want to watch. Then click "Start Polling" to start 
+          seeing data from the device. Use the "Toggle Follow" button to always see the last data put into the output 
+          window.
+        </p>
         <p>To disallow a device in Chrome, click the lock icon in the address/search box and "x" next to the device</p>
         
         <button onClick={this.allowUSBDevice}>Allow USB Device...</button>
-        <button onClick={this.pollDevices}>Poll All Devices Once</button>
+        {/*<button onClick={this.pollDevices}>Poll All Devices Once</button>*/}
 
         <DeviceList
           devices={this.state.allowedDevices}
