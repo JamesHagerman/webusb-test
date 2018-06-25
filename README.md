@@ -14,11 +14,14 @@ You can find a working demo of this on my GitHub Pages here:
 at the bottom of this readme. In short, that process is as follows:*
 
 ```
-# Get the correct driver setting strings for use with the unbind command 
+# Get the correct driver setting strings for use with the unbind command (It should look like: 2-1.1:1.0) 
 tree /sys/bus/usb/drivers/cdc_acm/
 OR
 dmesg | grep cdc | tail -n 2
+OR
+ls /sys/bus/usb/drivers/cdc_acm/ 
 
+# Unbind any of the devices you want to connect to via WebUSB
 echo -n "1-1.1:1.0" > /sys/bus/usb/drivers/cdc_acm/unbind # Unbind the first connected cdc_acm device
 echo -n "2-1.1:1.0" > /sys/bus/usb/drivers/cdc_acm/unbind # And unbind the second (if one was connected)
 ```
