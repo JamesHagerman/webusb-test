@@ -104,6 +104,16 @@ We'll step through both of these, make some React components along the way, and 
 The largest hangup with WebUSB is that it really doesn't work well when the OS drivers claim the USB interfaces before
 we get the chance to do so from our javascript code in the browser.
 
+*Updated: 2018-07-04* This behavior matches the intended purpose of WebUSB: To let the Operating System handle what it 
+can when it comes to most USB devices. HID devices, thumb drives, and a number ofother devices have better high level 
+libraries to handle interfacing most of the time.  WebUSB is about "new" devices!
+
+So, the correct way to handle this is for the USB device descriptors to be correctly defined for WebUSB access as 
+described here:
+[https://wicg.github.io/webusb/#webusb-platform-capability-descriptor](https://wicg.github.io/webusb/#webusb-platform-capability-descriptor)
+
+#### Manual unbind process to use until the Particle Device Descriptors are updated
+
 This requires us to manually `unbind` the USB device from the OS's driver. I can't find a way to do this using only Web
 technologies and that's obviously a drag.
 

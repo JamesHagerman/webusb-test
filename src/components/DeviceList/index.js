@@ -25,6 +25,7 @@ class DeviceList extends Component {
   }
 
   renderOpenState(device) {
+    //console.log('Device:', device)
     if (device.opened) {
       return <span className="enabled">open </span>
     }
